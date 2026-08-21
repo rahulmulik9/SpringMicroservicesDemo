@@ -1,6 +1,8 @@
 package com.rahul.student_service.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +23,7 @@ public class StudentRequestDTO {
     @NotBlank(message = "Student name must not be empty")
     private String studentName;
 
-    @NotBlank(message = "Address must not be empty")
-    private String address;
+    @NotNull(message = "Address details must not be empty")
+    @Valid // ensures the nested AddressRequestDTO fields are also validated
+    private AddressRequestDTO address;
 }

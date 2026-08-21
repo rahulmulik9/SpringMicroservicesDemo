@@ -1,5 +1,7 @@
 package com.rahul.student_service.service;
 
+import com.rahul.student_service.client.AddressClient;
+import com.rahul.student_service.dto.AddressResponseDTO;
 import com.rahul.student_service.dto.StudentRequestDTO;
 import com.rahul.student_service.dto.StudentResponseDTO;
 import com.rahul.student_service.exception.StudentNotFoundException;
@@ -9,31 +11,39 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * This is the "Service" layer implementation.
- * This is where the ACTUAL BUSINESS LOGIC lives:
- * - converting DTOs to Models and back
- * - deciding what happens on create/update/delete
- * - throwing exceptions when something is wrong
+ * Business logic for Student Service.
  *
- * The Controller does NOT contain this logic; it just delegates to this class.
+ * The key addition in Phase 2: this class now talks to the Address
+ * Service (via AddressClient) whenever it needs to create or read
+ * address data. Student Service never stores address details itself
+ * — it only stores addressId, and asks Address Service for the rest.
  */
 @Service
-@RequiredArgsConstructor // Lombok: generates a constructor for all "final" fields (dependency injection)
+@RequiredArgsConstructor
 public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
+    private final AddressClient addressClient;
 
     @Override
     public StudentResponseDTO createStudent(StudentRequestDTO requestDTO) {
+        // Step 1: Ask Address Service to create the address first
+        Map<String, Object> createdAddress = addressClient.createAddress(requestDTO.getAddress());
+        Long addressId = Long.valueOf(createdAddress.get("addressId").toString());
+
+        // Step 2: Save the Student locally, storing only the addressId
         Student student = new Student();
         student.setStudentName(requestDTO.getStudentName());
-        student.setAddress(requestDTO.getAddress());
+        student.setAddressId(addressId);
 
         Student savedStudent = studentRepository.save(student);
 
-        return mapToResponseDTO(savedStudent);
+        // Step 3: Build the combined response using the address we just created
+        AddressResponseDTO addressResponseDTO = mapToAddressResponseDTO(createdAddress);
+        return mapToResponseDTO(savedStudent, addressResponseDTO);
     }
 
     @Override
@@ -41,14 +51,22 @@ public class StudentServiceImpl implements StudentService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new StudentNotFoundException(studentId));
 
-        return mapToResponseDTO(student);
+        // Ask Address Service for the full address details using the stored addressId
+        Map<String, Object> address = addressClient.getAddressById(student.getAddressId());
+        AddressResponseDTO addressResponseDTO = mapToAddressResponseDTO(address);
+
+        return mapToResponseDTO(student, addressResponseDTO);
     }
 
     @Override
     public List<StudentResponseDTO> getAllStudents() {
         return studentRepository.findAll()
                 .stream()
-                .map(this::mapToResponseDTO)
+                .map(student -> {
+                    Map<String, Object> address = addressClient.getAddressById(student.getAddressId());
+                    AddressResponseDTO addressResponseDTO = mapToAddressResponseDTO(address);
+                    return mapToResponseDTO(student, addressResponseDTO);
+                })
                 .toList();
     }
 
@@ -58,11 +76,17 @@ public class StudentServiceImpl implements StudentService {
                 .orElseThrow(() -> new StudentNotFoundException(studentId));
 
         student.setStudentName(requestDTO.getStudentName());
-        student.setAddress(requestDTO.getAddress());
+
+        // Update the existing address in Address Service (not create a new one)
+        String url = "/api/addresses/" + student.getAddressId();
+        addressClient.updateAddress(student.getAddressId(), requestDTO.getAddress());
 
         Student updatedStudent = studentRepository.save(student);
 
-        return mapToResponseDTO(updatedStudent);
+        Map<String, Object> address = addressClient.getAddressById(student.getAddressId());
+        AddressResponseDTO addressResponseDTO = mapToAddressResponseDTO(address);
+
+        return mapToResponseDTO(updatedStudent, addressResponseDTO);
     }
 
     @Override
@@ -71,14 +95,28 @@ public class StudentServiceImpl implements StudentService {
                 .orElseThrow(() -> new StudentNotFoundException(studentId));
 
         studentRepository.delete(student);
+        // Note: we are intentionally NOT deleting the address here, to keep
+        // Phase 2 simple. This is a known simplification — real systems
+        // often handle this with events or cleanup jobs, which is beyond
+        // this beginner project's scope.
     }
 
-    // Small helper method to convert a Student (Model) into a StudentResponseDTO
-    private StudentResponseDTO mapToResponseDTO(Student student) {
+    private StudentResponseDTO mapToResponseDTO(Student student, AddressResponseDTO addressResponseDTO) {
         return new StudentResponseDTO(
                 student.getStudentId(),
                 student.getStudentName(),
-                student.getAddress()
+                addressResponseDTO
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    private AddressResponseDTO mapToAddressResponseDTO(Map<String, Object> address) {
+        return new AddressResponseDTO(
+                Long.valueOf(address.get("addressId").toString()),
+                (String) address.get("houseName"),
+                (String) address.get("streetName"),
+                (String) address.get("city"),
+                (String) address.get("pincode")
         );
     }
 }

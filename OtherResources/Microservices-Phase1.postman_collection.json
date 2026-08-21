@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Microservices Phase 1 - Student & Address",
-    "description": "CRUD requests for the independent Student Service (port 8081) and Address Service (port 8082).",
+    "name": "Microservices Phase 2 - Student & Address (Connected)",
+    "description": "CRUD requests for Student Service (port 8081) and Address Service (port 8082). Student Service now calls Address Service internally when creating/updating a student.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -13,13 +13,13 @@
       "name": "Student Service",
       "item": [
         {
-          "name": "Create Student",
+          "name": "Create Student (with nested Address)",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"studentName\": \"Rahul Sharma\",\n  \"address\": \"Pune, Maharashtra\"\n}"
+              "raw": "{\n  \"studentName\": \"Rahul Sharma\",\n  \"address\": {\n    \"houseName\": \"Sunrise Apartments\",\n    \"streetName\": \"MG Road\",\n    \"city\": \"Pune\",\n    \"pincode\": \"411001\"\n  }\n}"
             },
             "url": "{{studentBaseUrl}}"
           }
@@ -39,13 +39,13 @@
           }
         },
         {
-          "name": "Update Student",
+          "name": "Update Student (with nested Address)",
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"studentName\": \"Rahul Sharma Updated\",\n  \"address\": \"Mumbai, Maharashtra\"\n}"
+              "raw": "{\n  \"studentName\": \"Rahul Sharma Updated\",\n  \"address\": {\n    \"houseName\": \"Sunrise Apartments\",\n    \"streetName\": \"FC Road\",\n    \"city\": \"Pune\",\n    \"pincode\": \"411004\"\n  }\n}"
             },
             "url": "{{studentBaseUrl}}/1"
           }

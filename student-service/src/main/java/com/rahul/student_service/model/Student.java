@@ -12,20 +12,25 @@ import lombok.NoArgsConstructor;
 /**
  * This is the "Model" (also called Entity).
  * It represents a row in the "student" table in the database.
- * Every field here becomes a column in the table.
+ *
+ * Note: we no longer store the full address here. We only store
+ * addressId — a reference (like a foreign key) to a record that
+ * lives in the Address Service's own database. The Student Service
+ * does NOT own address data; the Address Service does.
  */
 @Entity
 @Table(name = "student")
-@Data               // Lombok: auto-generates getters, setters, toString, equals, hashCode
-@NoArgsConstructor   // Lombok: generates an empty constructor
-@AllArgsConstructor  // Lombok: generates a constructor with all fields
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Student {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // auto-generated Student ID
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long studentId;
 
     private String studentName;
 
-    private String address;
+    // Reference to the Address record living in the Address Service
+    private Long addressId;
 }
