@@ -1,0 +1,113 @@
+{
+  "info": {
+    "name": "Microservices Phase 1 - Student & Address",
+    "description": "CRUD requests for the independent Student Service (port 8081) and Address Service (port 8082).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "studentBaseUrl", "value": "http://localhost:8081/api/students" },
+    { "key": "addressBaseUrl", "value": "http://localhost:8082/api/addresses" }
+  ],
+  "item": [
+    {
+      "name": "Student Service",
+      "item": [
+        {
+          "name": "Create Student",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentName\": \"Rahul Sharma\",\n  \"address\": \"Pune, Maharashtra\"\n}"
+            },
+            "url": "{{studentBaseUrl}}"
+          }
+        },
+        {
+          "name": "Get Student By Id",
+          "request": {
+            "method": "GET",
+            "url": "{{studentBaseUrl}}/1"
+          }
+        },
+        {
+          "name": "Get All Students",
+          "request": {
+            "method": "GET",
+            "url": "{{studentBaseUrl}}"
+          }
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentName\": \"Rahul Sharma Updated\",\n  \"address\": \"Mumbai, Maharashtra\"\n}"
+            },
+            "url": "{{studentBaseUrl}}/1"
+          }
+        },
+        {
+          "name": "Delete Student",
+          "request": {
+            "method": "DELETE",
+            "url": "{{studentBaseUrl}}/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Address Service",
+      "item": [
+        {
+          "name": "Create Address",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"houseName\": \"Sunrise Apartments\",\n  \"streetName\": \"MG Road\",\n  \"city\": \"Pune\",\n  \"pincode\": \"411001\"\n}"
+            },
+            "url": "{{addressBaseUrl}}"
+          }
+        },
+        {
+          "name": "Get Address By Id",
+          "request": {
+            "method": "GET",
+            "url": "{{addressBaseUrl}}/1"
+          }
+        },
+        {
+          "name": "Get All Addresses",
+          "request": {
+            "method": "GET",
+            "url": "{{addressBaseUrl}}"
+          }
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"houseName\": \"Sunrise Apartments\",\n  \"streetName\": \"FC Road\",\n  \"city\": \"Pune\",\n  \"pincode\": \"411004\"\n}"
+            },
+            "url": "{{addressBaseUrl}}/1"
+          }
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "url": "{{addressBaseUrl}}/1"
+          }
+        }
+      ]
+    }
+  ]
+}
