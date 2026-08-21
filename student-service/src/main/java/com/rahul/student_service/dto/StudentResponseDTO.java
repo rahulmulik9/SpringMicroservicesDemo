@@ -19,5 +19,5 @@ public class StudentResponseDTO {
 
     private Long studentId;
     private String studentName;
-    private String address;
+    private AddressResponseDTO address;
 }

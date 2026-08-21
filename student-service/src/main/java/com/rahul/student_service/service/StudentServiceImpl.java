@@ -1,5 +1,7 @@
 package com.rahul.student_service.service;
 
+import com.rahul.student_service.client.AddressClient;
+import com.rahul.student_service.dto.AddressResponseDTO;
 import com.rahul.student_service.dto.StudentRequestDTO;
 import com.rahul.student_service.dto.StudentResponseDTO;
 import com.rahul.student_service.exception.StudentNotFoundException;
@@ -9,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * This is the "Service" layer implementation.
@@ -19,21 +22,27 @@ import java.util.List;
  *
  * The Controller does NOT contain this logic; it just delegates to this class.
  */
+
 @Service
-@RequiredArgsConstructor // Lombok: generates a constructor for all "final" fields (dependency injection)
+@RequiredArgsConstructor
 public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
+    private final AddressClient addressClient;
 
     @Override
     public StudentResponseDTO createStudent(StudentRequestDTO requestDTO) {
+        Map<String, Object> createdAddress = addressClient.createAddress(requestDTO.getAddress());
+        Long addressId = Long.valueOf(createdAddress.get("addressId").toString());
+
         Student student = new Student();
         student.setStudentName(requestDTO.getStudentName());
-        student.setAddress(requestDTO.getAddress());
+        student.setAddressId(addressId);
 
         Student savedStudent = studentRepository.save(student);
 
-        return mapToResponseDTO(savedStudent);
+        AddressResponseDTO addressResponseDTO = mapToAddressResponseDTO(createdAddress);
+        return mapToResponseDTO(savedStudent, addressResponseDTO);
     }
 
     @Override
@@ -41,14 +50,21 @@ public class StudentServiceImpl implements StudentService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new StudentNotFoundException(studentId));
 
-        return mapToResponseDTO(student);
+        Map<String, Object> address = addressClient.getAddressById(student.getAddressId());
+        AddressResponseDTO addressResponseDTO = mapToAddressResponseDTO(address);
+
+        return mapToResponseDTO(student, addressResponseDTO);
     }
 
     @Override
     public List<StudentResponseDTO> getAllStudents() {
         return studentRepository.findAll()
                 .stream()
-                .map(this::mapToResponseDTO)
+                .map(student -> {
+                    Map<String, Object> address = addressClient.getAddressById(student.getAddressId());
+                    AddressResponseDTO addressResponseDTO = mapToAddressResponseDTO(address);
+                    return mapToResponseDTO(student, addressResponseDTO);
+                })
                 .toList();
     }
 
@@ -58,11 +74,14 @@ public class StudentServiceImpl implements StudentService {
                 .orElseThrow(() -> new StudentNotFoundException(studentId));
 
         student.setStudentName(requestDTO.getStudentName());
-        student.setAddress(requestDTO.getAddress());
+        addressClient.updateAddress(student.getAddressId(), requestDTO.getAddress());
 
         Student updatedStudent = studentRepository.save(student);
 
-        return mapToResponseDTO(updatedStudent);
+        Map<String, Object> address = addressClient.getAddressById(student.getAddressId());
+        AddressResponseDTO addressResponseDTO = mapToAddressResponseDTO(address);
+
+        return mapToResponseDTO(updatedStudent, addressResponseDTO);
     }
 
     @Override
@@ -73,12 +92,22 @@ public class StudentServiceImpl implements StudentService {
         studentRepository.delete(student);
     }
 
-    // Small helper method to convert a Student (Model) into a StudentResponseDTO
-    private StudentResponseDTO mapToResponseDTO(Student student) {
+    private StudentResponseDTO mapToResponseDTO(Student student, AddressResponseDTO addressResponseDTO) {
         return new StudentResponseDTO(
                 student.getStudentId(),
                 student.getStudentName(),
-                student.getAddress()
+                addressResponseDTO
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    private AddressResponseDTO mapToAddressResponseDTO(Map<String, Object> address) {
+        return new AddressResponseDTO(
+                Long.valueOf(address.get("addressId").toString()),
+                (String) address.get("houseName"),
+                (String) address.get("streetName"),
+                (String) address.get("city"),
+                (String) address.get("pincode")
         );
     }
 }
