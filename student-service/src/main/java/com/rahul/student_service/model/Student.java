@@ -16,16 +16,17 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @Table(name = "student")
-@Data               // Lombok: auto-generates getters, setters, toString, equals, hashCode
-@NoArgsConstructor   // Lombok: generates an empty constructor
-@AllArgsConstructor  // Lombok: generates a constructor with all fields
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Student {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // auto-generated Student ID
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long studentId;
 
     private String studentName;
 
-    private String address;
+    // Reference to the Address record living in the Address Service
+    private Long addressId;
 }
